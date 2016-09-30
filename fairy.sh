@@ -66,6 +66,7 @@ GLOBAL_CHANGE_ID=1
 CHANGE_STAMP="Line modified by Fairy below. Refer 00001"
 PHP_SERVER_CONFIG="/etc/php/7.0/fpm/php.ini"
 MEMCACHED_IPC_SOCKET_PATH="/tmp/memcached.sock"
+COMPOSER=1 # installs PHP Composer
 LARAVEL=0 # change to 1 if you want to install laravel (untested feature, use at your own risk)
 DO=0 # change to 1 if installing in Digital Ocean
 
@@ -122,7 +123,7 @@ gather "IP address is : `ifconfig eth0 | grep "inet " | cut -d':' -f2 | cut -d' 
 if [ $DO -eq 1 ]; then
 
   info "Resolving a locale issue..."
-  cat 'LC_ALL="en_US.UTF-8"' >> /etc/environment # stops the pesky LC_ALL issue after restart
+  echo 'LC_ALL="en_US.UTF-8"' >> /etc/environment # stops the pesky LC_ALL issue after restart
 
   info "Adding some swap space..."
   fallocate -l 1G /swapfile # creates SWAP space
@@ -522,26 +523,6 @@ chmod 0700 /root/create_database.sh
 
 # # For laravel
 
-if [ $LARAVEL -eq 1 ]; then
-
-  info "Trying to install composer for laravel..."
-  apt-get install --assume-yes --quiet unzip  >>/dev/null
-  apt-get install --assume-yes --quiet php7.0-mbstring php-xml php-zip >>/dev/null
-  php -r "copy('https://getcomposer.org/installer', '~/composer-setup.php');"
-  php -r "if (hash_file('SHA384', '~/composer-setup.php') === 'e115a8dc7871f15d853148a7fbac7da27d6c0030b848d9b3dc09e2a0388afed865e6a3d6b3c0fad45c48e2b5fc1196ae') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-  php ~/composer-setup.php
-  php -r "unlink('~/composer-setup.php');"
-  mv ~/composer.phar /usr/local/bin/composer
-
-  info "Trying to install laravel installer via composer ..."
-  /usr/local/bin/composer global require "laravel/installer"
-  PATH=$PATH:~/.config/composer/vendor/bin/
-
-  info "Now you can use laravel command to create a new site"
-fi
-
-
-
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -572,6 +553,47 @@ info "... allowing http traffic from any"
 ufw allow ${PORT}/tcp
 info "... enabling firewall logging"
 ufw logging on
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                          Install PHP Composer                               #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+if [ $COMPOSER -eq 1 ]; then
+
+  info "Trying to install composer for PHP..."
+  apt-get install --assume-yes --quiet unzip  >>/dev/null
+  apt-get install --assume-yes --quiet php7.0-mbstring php-xml php-zip >>/dev/null
+  cd /root/
+  php -r "copy('https://getcomposer.org/installer', '/root/composer-setup.php');"
+  php -r "if (hash_file('SHA384', '/root/composer-setup.php') === 'e115a8dc7871f15d853148a7fbac7da27d6c0030b848d9b3dc09e2a0388afed865e6a3d6b3c0fad45c48e2b5fc1196ae') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+  php /root/composer-setup.php
+  php -r "unlink('/root/composer-setup.php');"
+  mv /root/composer.phar /usr/local/bin/composer
+
+  If_Error_Exit "Failed to load composer."
+  info "Composer installed"
+fi
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                          Install LARAVEL                                    #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+if [ $LARAVEL -eq 1 ]; then
+  
+  info "Trying to install laravel installer via composer ..."
+  /usr/local/bin/composer global require "laravel/installer"
+  PATH=$PATH:~/.config/composer/vendor/bin/
+
+  info "Now you can use laravel command to create a new site"
+fi
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                          Finalizing the setup                               #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 if [ "22" != "${SSH_PORT}" ]; then
   info "YOUR CURRENT SSH SESSION MAY GET DISRUPTED. IF THAT HAPPENS, SSH TO PORT $SSH_PORT AFTER 2 MIN"
 fi
