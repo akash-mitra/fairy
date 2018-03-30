@@ -9,7 +9,7 @@
 # No implicit or explicit guarantee assured, use in your own risk 
 #
 
-VERSION="0.2"
+VERSION="0.3"
 set -o pipefail
 
 # Environment variables - setting default log level to info
@@ -58,15 +58,15 @@ PHP_POST_MAX_SIZE="4M"
 FPM_POOL_DIR="/etc/php/7.0/fpm/pool.d"
 MEMCACHED_CONFIG="/etc/memcached.conf"
 FASTCGI_PARAM="/etc/nginx/fastcgi_params"
-MARIA_DB_SIGNING_KEY="0xcbcb082a1bb943db"
-MARIA_DB_VERSION="5.5"
-FLAVOR="trusty"
+MARIA_DB_SIGNING_KEY="0xF1656F24C74CD1D8"
+MARIA_DB_VERSION="10.0"
+FLAVOR="xenial"
 CHANGE_ID="00001"
 GLOBAL_CHANGE_ID=1
 CHANGE_STAMP="Line modified by Fairy below. Refer 00001"
 PHP_SERVER_CONFIG="/etc/php/7.0/fpm/php.ini"
 MEMCACHED_IPC_SOCKET_PATH="/tmp/memcached.sock"
-COMPOSER=1 # installs PHP Composer
+COMPOSER=0 # installs PHP Composer
 LARAVEL=0 # change to 1 if you want to install laravel (untested feature, use at your own risk)
 DO=0 # change to 1 if installing in Digital Ocean
 
@@ -392,7 +392,7 @@ apt-key adv --recv-keys --keyserver keyserver.ubuntu.com $MARIA_DB_SIGNING_KEY  
 If_Error_Exit "Can not add the signing key"
 echo ""                                                                                          >> /etc/apt/sources.list
 echo "# ${CHANGE_STAMP}"                                                                         >> /etc/apt/sources.list
-echo "# MariaDB 5.5 repository list"                                                             >> /etc/apt/sources.list
+echo "# MariaDB ${MARIA_DB_VERSION} repository list"                                                             >> /etc/apt/sources.list
 echo "# http://downloads.mariadb.org/mariadb/repositories/"                                      >> /etc/apt/sources.list
 echo "deb http://ftp.osuosl.org/pub/mariadb/repo/${MARIA_DB_VERSION}/ubuntu ${FLAVOR} main"      >> /etc/apt/sources.list
 echo "deb-src http://ftp.osuosl.org/pub/mariadb/repo/${MARIA_DB_VERSION}/ubuntu ${FLAVOR} main"  >> /etc/apt/sources.list
